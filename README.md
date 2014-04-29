@@ -1,0 +1,1 @@
+A chrome extension for managing tabs.
