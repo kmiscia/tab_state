@@ -7,6 +7,10 @@
         min-width: 357px;
         overflow-x: hidden;
       }
+
+      table, th, td {
+        border: 1px solid black;
+      }
     </style>
 
 
@@ -15,12 +19,15 @@
   </head>
   <body>
     <span>Groups</span>
-    <ul id="groups">
-      <li>Hello</li>
-    </ul>
+
+    <table id="groups">
+    </table>
+
     <label for="group_name">Group Name</label>
     <input id="group_name" size="20"></input><br/>
     <input id="save_group" type="button" value="Save As Group"/>
+    <br/>
+    <a id="clear" href="#">Clear</a>
   </body>
 </html>
 
