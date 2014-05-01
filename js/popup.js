@@ -22,6 +22,40 @@ document.addEventListener('DOMContentLoaded', function () {
       removeUIGroupNames();
     });
 
+    $("#groups").on('click', '.restore', function(){
+      
+      groupName = $(this).parents("tr").children(".name").html();
+
+      var existingTabs = [];
+
+      chrome.tabs.getAllInWindow(null, function(tabs){
+        for(var j = 0; j < tabs.length; j++)
+          existingTabs[j] = tabs[j].id;
+      });
+
+      chrome.storage.local.get('savedGroups', function(items){
+
+        var savedGroups = (items['savedGroups'] == undefined) ? {} : items['savedGroups'];
+        var tabs = savedGroups[groupName];
+
+        for(var i = 0; i < tabs.length; i++){
+          chrome.tabs.create({
+            'index': tabs[i].index,
+            'url': tabs[i].url,
+            'active': tabs[i].active,
+            'selected': tabs[i].selected,
+            'pinned': tabs[i].pinned
+          });
+        }
+
+      });
+
+      for(var k = 0; k < existingTabs.length; k++){
+        chrome.tabs.remove(existingTabs[k]);
+      }
+
+    })
+
     $("#groups").on('click', '.delete', function(){
       groupName = $(this).parents("tr").children(".name").html();
       removeFromStorage(groupName, function(){
@@ -31,12 +65,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     $("#save_group").on('click', function(){
       if($groupName.val().length)
-        addToStorage($groupName.val(), function(){
+        addTabsToStorage($groupName.val(), function(){
           appendUIGroupName($groupName.val());
           $groupName.val("");
         });
       else
         errorMessage("Group name is blank");        
+    });
+  }
+
+  var addTabsToStorage = function(groupName, callback){
+
+    chrome.tabs.getAllInWindow(null, function(tabs){
+
+      chrome.storage.local.get('savedGroups', function(items){
+
+        var savedGroups = (items['savedGroups'] == undefined) ? {} : items['savedGroups'];
+        savedGroups[groupName] = tabs;
+
+        chrome.storage.local.set({'savedGroups': savedGroups}, callback);
+      });
     });
   }
 
@@ -75,7 +123,9 @@ document.addEventListener('DOMContentLoaded', function () {
         'class': 'name',
         'text': groupName
       }))
+      .append($("<td/>").append(restoreUILink()))
       .append($("<td/>").append(deleteUILink()));
+
     $groups.append($row);
   }
 
@@ -90,12 +140,20 @@ document.addEventListener('DOMContentLoaded', function () {
     $groups.empty();
   }
 
+  var restoreUILink = function(){
+    return $("<a/>", {
+      'href': '#',
+      'class': 'restore',
+      'html': 'Restore'
+    });
+  }
+
   var deleteUILink = function(){
     return $("<a/>", {
       'href': '#',
       'class': 'delete',
       'html': 'Delete'
-    })
+    });
   }
 
   initialize();
